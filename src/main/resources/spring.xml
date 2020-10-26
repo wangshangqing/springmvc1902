@@ -17,7 +17,9 @@
 
     <bean id="settings" class="org.apache.ibatis.session.Configuration">
         <property name="logImpl" value="org.apache.ibatis.logging.log4j.Log4jImpl"></property>
-           
+
+
+
         <property name="mapUnderscoreToCamelCase" value="true"></property>
     </bean>
 
