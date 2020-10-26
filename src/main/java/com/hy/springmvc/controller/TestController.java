@@ -41,6 +41,7 @@ public class TestController{
             @ApiResponse(code = 200,message = "查询成功",response = Student.class)
     })
     public Student queryAll(@ApiParam(required = true,name = "id",value = "学生ID")@RequestParam String id){
+
         return studentSerive.getById(id);
     }
 
