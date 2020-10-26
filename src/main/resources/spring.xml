@@ -42,6 +42,7 @@
     <!--spring批量扫描mapper-->
     <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
         <property name="basePackage" value="com.hy.springmvc.mapepr"></property>
+           
         <property name="sqlSessionFactoryBeanName" value="sessionfactory"></property>
     </bean>
 
