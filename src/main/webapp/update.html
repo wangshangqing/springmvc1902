@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>学生信息添加</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/layui/css/layui.css" media="all">
+
+    <script src="/layui/layui.js"></script>
+    <script type="text/javascript" src="jquery-3.3.1.min.js"></script>
+</head>
+<body>
+
+<form class="layui-form" action="" lay-filter="myform">
+    <div class="layui-form-item">
+        <label class="layui-form-label">姓名</label>
+        <div class="layui-input-block">
+            <input type="text" lay-verify="stuName" name="stuName"  placeholder="请输入标题" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">班级</label>
+        <div class="layui-input-block">
+            <select name="classno" lay-verify="required" id="sel_cla">
+
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">性别</label>
+        <div class="layui-input-block">
+            <input type="radio" name="sex" value="1" title="男">
+            <input type="radio" name="sex" value="2" title="女" checked>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-submit lay-filter="formDemo">提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+</form>
+
+<script type="text/javascript">
+    layui.use(['form','table','layer'],function(){
+        var table = layui.table;
+        var form = layui.form;
+        var layer=layui.layer;
+        //发异步请求查询班级信息
+        $.ajax({
+            type:'get',
+            contentType:'application/json;charset=utf-8',
+            url:'stu/queryClass.do',
+            success:function (result) {
+                console.log(result);
+                for(var i=0;i<result.length;i++){
+                    var cla=result[i];
+                    var sel_cla=document.getElementById("sel_cla");
+                    var op=new Option(cla.classname,cla.cno);
+                    sel_cla.add(op);
+                }
+                form.render();
+
+                //发异步请求查查询学生信息
+                $.ajax({
+                    type:'get',
+                    url:'stu/queryById.do?id='+getQueryStringByName("id"),
+                    success:function (result) {
+                        //给表单赋值
+                        form.val("myform", { //formTest 即 class="layui-form" 所在元素属性 lay-filter="" 对应的值
+                            "stuName":result.stuName // "name": "value"
+                            ,"sex":result.sex
+                            ,"classno":result.classno
+                        });
+                    },
+                    error:function () {
+
+                    }
+
+                })
+            },
+            error:function () {
+
+            }
+
+        })
+
+
+
+
+        //监听表单提交
+        form.on('submit(formDemo)', function(data){
+            console.log(data.elem) //被执行事件的元素DOM对象，一般为button对象
+            console.log(data.form) //被执行提交的form对象，一般在存在form标签时才会返回
+            console.log(data.field) //当前容器的全部表单字段，名值对形式：{name: value}
+
+            $.ajax({
+                type:'get',
+                url:'stu/save.do',
+                data:data.field,
+                success:function (result) {
+                    layer.msg('保存成功！', {
+                        icon: 1,
+                        time: 2000 //2秒关闭（如果不配置，默认是3秒）
+                    }, function(){
+                        //当你在iframe页面关闭自身时
+                        var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                        parent.layer.close(index); //再执行关闭
+                    });
+                },
+                error:function () {
+                    layer.msg("保存失败！");
+                }
+
+            })
+
+
+            return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+        });
+
+
+        //表单自定义校验
+        form.verify({
+            stuName: function(value, item){ //value：表单的值、item：表单的DOM对象
+                if(value.length<=1){
+                    return '用户名长度必须大于一';
+                }
+            }
+        });
+
+    });
+
+    //根据参数名获取参数值
+    function getQueryStringByName(name){
+        var result = location.search.match(new RegExp("[\?\&]" + name+ "=([^\&]+)","i"));
+        if(result == null || result.length < 1){
+            return "";
+        }
+        return result[1];
+    }
+</script>
+
+
+
+</body>
+</html>

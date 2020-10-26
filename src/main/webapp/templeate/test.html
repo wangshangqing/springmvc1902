@@ -1,0 +1,32 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Title</title>
+    <script type="text/javascript" src="" th:src="@{/layui/layui.js}"></script>
+</head>
+<body>
+
+<a th:unless="2>3">删除</a>
+
+<table border="1">
+    <tr>
+        <td>编号</td>
+        <td>姓名</td>
+        <td>性别</td>
+        <td>班级</td>
+        <td>操作</td>
+    </tr>
+    <tr th:each="stu,st:${list}">
+        <td th:text="${st.count}"></td>
+        <td th:text="${stu.stuName}"></td>
+        <td th:text="${stu.sex == '1'} ? '男':'女'"></td>
+        <td th:text="${stu.classes.classname}"></td>
+        <td>
+            <a href="/stu/del.do?id=${stu.stuno}" th:href="@{/stu/del.do(id=${stu.stuno})}">删除</a>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

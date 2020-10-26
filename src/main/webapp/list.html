@@ -1,0 +1,251 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>学生信息列表</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/layui/css/layui.css" media="all">
+
+    <script src="/layui/layui.js"></script>
+    <script type="text/javascript" src="jquery-3.3.1.min.js"></script>
+</head>
+<body>
+
+<form class="layui-form" action="">
+    <div class="layui-inline">
+        <label class="layui-form-label">姓名</label>
+        <div class="layui-input-block">
+            <input type="text" name="stuName"  placeholder="请输入标题" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-inline">
+        <label class="layui-form-label">班级</label>
+        <div class="layui-input-block">
+            <select name="classno" lay-verify="required" id="sel_cla">
+
+            </select>
+        </div>
+    </div>
+    <div class="layui-inline">
+        <label class="layui-form-label">性别</label>
+        <div class="layui-input-block">
+            <input type="radio" name="sex" value="1" title="男">
+            <input type="radio" name="sex" value="2" title="女" checked>
+        </div>
+    </div>
+    <div class="layui-inline">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-submit lay-filter="formDemo">查询</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+</form>
+
+<table id="demo" lay-filter="test"></table>
+<script type="text/html" id="sex">
+    {{#  if(d.sex == 1){ }}
+        男
+    {{#  } else { }}
+        女
+    {{#  } }}
+</script>
+
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="detail"><i class="layui-icon">&#xe615;</i>查看</a>
+    <a class="layui-btn layui-btn-xs" lay-event="edit"><i class="layui-icon">&#xe642;</i>编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon">&#xe640;</i>删除</a>
+</script>
+
+<script type="text/html" id="toolbarDemo">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
+        <button class="layui-btn layui-btn-sm" lay-event="delete">批量删除</button>
+    </div>
+</script>
+<script type="text/javascript">
+    layui.use(['form','table','layer'],function(){
+        var table = layui.table;
+        var form = layui.form;
+        var layer=layui.layer;
+
+        //发异步请求查询班级信息
+        $.ajax({
+            type:'get',
+            contentType:'application/json;charset=utf-8',
+            url:'stu/queryClass.do',
+            success:function (result) {
+                console.log(result);
+                for(var i=0;i<result.length;i++){
+                    var cla=result[i];
+                    var sel_cla=document.getElementById("sel_cla");
+                    var op=new Option(cla.classname,cla.cno);
+                    sel_cla.add(op);
+                }
+                form.render();
+            },
+            error:function () {
+
+            }
+            
+        })
+
+        //监听表单提交
+        form.on('submit(formDemo)', function(data){
+            console.log(data.elem) //被执行事件的元素DOM对象，一般为button对象
+            console.log(data.form) //被执行提交的form对象，一般在存在form标签时才会返回
+            console.log(data.field) //当前容器的全部表单字段，名值对形式：{name: value}
+            table.reload('demo', {
+                url: '/stu/query.do'
+                ,where: data.field//设定异步数据接口的额外参数
+                //,height: 300
+            });
+            return false; //阻止表单跳转。如果需要表单跳转，去掉这段即可。
+        });
+
+        //执行渲染
+        table.render({
+            elem: '#demo' //指定原始表格元素选择器（推荐id选择器）
+            ,height: 315//容器高度
+            ,url:'/stu/query.do'
+            ,toolbar:'#toolbarDemo'
+            ,defaultToolbar:['filter']
+            ,page:true
+            ,limit:3
+            ,limits:[1,3,5]
+            ,cols: [[
+                {field:'',title:'',type:'checkbox'}//表头
+                ,{field: '编号', title: 'ID', width:80, sort: true,templet:'<div>{{d.LAY_INDEX}}</div>'}
+                ,{field: 'stuName', title: '用户名', width:80}
+                ,{field: 'sex', title: '性别', width:80,templet:'#sex'}
+                ,{field: 'age', title: '年龄', width:80}
+                ,{field: 'classes', title: '班级', width: 177,templet:'<div>{{d.classes.classname}}</div>'}
+                ,{field: '', title: '操作', width: 230,toolbar:'#barDemo'}
+            ]]
+        });
+
+        //监听行工具条事件
+        table.on('tool(test)',function (obj) {
+            var event=obj.event;
+            var obj1=obj.data;
+            if(event==='detail'){
+                alert('查看');
+            }else if(event==='edit'){
+                layer.open({
+                    type: 2,
+                    content: 'update.html?id='+obj1.stuno, //这里content是一个普通的String
+                    area: ['600px', '600px'],
+                    cancel: function(index, layero){
+                        if(confirm('确定要关闭么')){ //只有当点击confirm框的确定时，该层才会关闭
+                            layer.close(index)
+                        }
+                        return false;
+                    },
+                    end:function () {
+                        table.reload('demo', {
+                            url: '/stu/query.do'
+                            //,height: 300
+                        });
+                    }
+                });
+
+
+            }else if(event==='del'){
+                layer.confirm('您真的确认要删除吗？', {icon: 3, title:'提示'}, function(index){
+                    $.ajax({
+                        type:'get',
+                        contentType:'application/json;charset=utf-8',
+                        data:{id:obj1.stuno},
+                        url:'stu/del.do',
+                        success:function (result) {
+                            if(result==='1'){//删除成功
+                                layer.msg("删除成功！");
+                                table.reload('demo', {
+                                    url: '/stu/query.do'
+                                    //,height: 300
+                                });
+                            }else{
+
+                            }
+                        },
+                        error:function () {
+
+                        }
+
+                    })
+                    layer.close(index);
+                });
+
+
+            }
+        });
+
+
+        //监听头部工具栏
+        table.on('toolbar(test)',function (obj) {
+            var event=obj.event;
+            if(event==='add'){
+                layer.open({
+                    type: 2,
+                    content: 'add.html', //这里content是一个普通的String
+                    area: ['600px', '600px'],
+                    cancel: function(index, layero){
+                        if(confirm('确定要关闭么')){ //只有当点击confirm框的确定时，该层才会关闭
+                            layer.close(index)
+                        }
+                        return false;
+                    },
+                    end:function () {
+                        table.reload('demo', {
+                            url: '/stu/query.do'
+                            //,height: 300
+                        });
+                    }
+                });
+            }else if(event==='delete'){
+                var checkStatus = table.checkStatus(obj.config.id);
+                var data = checkStatus.data;
+                if(data.length==0){
+                    layer.msg("您没有选择任何一行");
+                }else{
+                    var ids=new Array();
+                    for(var i=0;i<data.length;i++){
+                        ids.push(data[i].stuno);
+                    }
+
+                    layer.confirm('您真的确认要删除吗？', {icon: 3, title:'提示'}, function(index){
+                        $.ajax({
+                            type:'get',
+                            contentType:'application/json;charset=utf-8',
+                            data:{ids:ids},
+                            traditional:true,
+                            url:'stu/delIds.do',
+                            success:function (result) {
+                                if(result==='1'){//删除成功
+                                    layer.msg("删除成功！");
+                                    table.reload('demo', {
+                                        url: '/stu/query.do'
+                                        //,height: 300
+                                    });
+                                }else{
+
+                                }
+                            },
+                            error:function () {
+
+                            }
+
+                        })
+                        layer.close(index);
+                    });
+                }
+            }
+        });
+
+
+    });
+</script>
+
+
+
+</body>
+</html>
